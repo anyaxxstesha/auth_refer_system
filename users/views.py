@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
-from users.serializers import UserRetrieveSerializer, UserPhoneSerializer
+from users.serializers import UserPhoneSerializer
 from django.contrib.auth import get_user_model
 
 from users.services import create_invite_code, send_enter_code, create_enter_code

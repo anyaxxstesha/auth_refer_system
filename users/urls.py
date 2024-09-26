@@ -11,8 +11,8 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
-    path("auth/get-code/", views.UserGetCodeAPIView.as_view(), name="get_code"),
+    path('auth/get_code/', views.UserGetCodeAPIView.as_view(), name='get_code'),
 
-    path('auth/send-code/', TokenObtainPairView.as_view(), name='send_code'),
+    path('auth/send_code/', TokenObtainPairView.as_view(), name='send_code'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     ]

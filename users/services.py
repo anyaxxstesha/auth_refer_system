@@ -29,5 +29,5 @@ def create_enter_code():
 
 
 def send_enter_code(phone, code):
-    print('phone: {phone} | code: {code}')
+    print(f'phone: {phone} | code: {code}')
     sleep(2)
