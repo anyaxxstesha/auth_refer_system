@@ -17,6 +17,6 @@ urlpatterns = [
     path('auth/send_code/', TokenObtainPairView.as_view(), name='send_code'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    path("set_referer/", SetReferrerAPIView.as_view(), name="set-referral"),
-    path("retrieve_current/", UserRetrieveAPIView.as_view(), name="retrieve-current"),
+    path('set_referrer/', SetReferrerAPIView.as_view(), name='set_referrer'),
+    path('retrieve/', UserRetrieveAPIView.as_view(), name='retrieve'),
 ]
