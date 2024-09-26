@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
-from users.serializers import UserPhoneSerializer
+from users.serializers import UserPhoneSerializer, UserRetrieveSerializer
 from django.contrib.auth import get_user_model
 
 from users.services import create_invite_code, send_enter_code, create_enter_code
@@ -51,3 +51,30 @@ class UserGetEnterCodeMixin(GetOrCreateModelMixin):
 
 class UserGetCodeAPIView(UserGetEnterCodeMixin, generics.GenericAPIView):
     pass
+
+
+class SetReferrerAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        invite_code = request.data.get('invite_code', '')
+        referral = request.user
+        if referral.invite_code == invite_code:
+            return Response({'message': 'You cannot enter your own invite code'})
+        if referral.invited_by is not None:
+            return Response({'message': f'You have already been referral '
+                                        f'of user with invite code {referral.invited_by.invite_code}'})
+
+        referer = get_object_or_404(User.objects.filter(invite_code=invite_code))
+
+        referral.invited_by = referer
+        referral.save()
+        return Response({'message': f'You have become referral of user with invite code {referer.invite_code}'})
+
+
+class UserRetrieveAPIView(generics.RetrieveAPIView):
+    serializer_class = UserRetrieveSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user

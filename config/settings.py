@@ -109,4 +109,4 @@ SIMPLE_JWT = {
     'UPDATE_LAST_LOGIN': True,
 }
 
-AUTHENTICATION_BACKENDS = ["users.auth_backends.EnterCodeBackend"]
+AUTHENTICATION_BACKENDS = ['users.auth_backends.EnterCodeBackend']
