@@ -1,10 +1,12 @@
 from rest_framework import generics, status, views
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from users.serializers import UserPhoneSerializer, UserRetrieveSerializer
+from users.serializers import UserPhoneSerializer, UserRetrieveSerializer, MyTokenObtainPairSerializer
 from django.contrib.auth import get_user_model
 
 from users.services import create_invite_code, send_enter_code, create_enter_code
@@ -13,14 +15,15 @@ User = get_user_model()
 
 
 class GetOrCreateModelMixin:
+
     def get_or_create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         created = self.perform_get_or_create(serializer)
         if created:
             headers = self.get_success_headers(request.data)
-            return Response(request.data, status=status.HTTP_201_CREATED, headers=headers)
-        return Response(request.data, status=status.HTTP_200_OK)
+            return Response({'serializer': serializer}, status=status.HTTP_201_CREATED, headers=headers)
+        return Response({'serializer': serializer}, status=status.HTTP_200_OK)
 
     def perform_get_or_create(self, serializer):
         raise NotImplementedError
@@ -50,11 +53,47 @@ class UserGetEnterCodeMixin(GetOrCreateModelMixin):
 
 
 class UserGetCodeAPIView(UserGetEnterCodeMixin, generics.GenericAPIView):
-    pass
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'get_code.html'
 
+    def get(self, request, *args, **kwargs):
+        serializer = self.serializer_class()
+        return Response({'serializer': serializer})
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'send_code.html'
+    permission_classes = (AllowAny,)
+    serializer_class = MyTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class()
+        print(*[f'{k}: {v}' for k, v in super().post(request, *args, **kwargs).data.items()], sep='\n')
+        return Response({'serializer': serializer})
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.serializer_class()
+        return Response({'serializer': serializer})
+
+
+class MyTokenRefreshView(TokenRefreshView):
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'refresh.html'
+    permission_classes = (AllowAny,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer_class()()
+        print(*[f'{k}: {v}' for k, v in super().post(request, *args, **kwargs).data.items()], sep='\n')
+        return Response({'serializer': serializer})
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.get_serializer_class()()
+        return Response({'serializer': serializer})
 
 class SetReferrerAPIView(views.APIView):
     permission_classes = [IsAuthenticated]
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'set_referrer.html'
 
     def post(self, request):
         invite_code = request.data.get('invite_code', '')
@@ -71,10 +110,14 @@ class SetReferrerAPIView(views.APIView):
         referral.save()
         return Response({'message': f'You have become referral of user with invite code {referer.invite_code}'})
 
+    def get(self, request, *args, **kwargs):
+        return Response()
 
 class UserRetrieveAPIView(generics.RetrieveAPIView):
     serializer_class = UserRetrieveSerializer
     permission_classes = [IsAuthenticated]
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'retrieve.html'
 
     def get_object(self):
         return self.request.user
